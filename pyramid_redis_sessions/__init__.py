@@ -80,6 +80,7 @@ def RedisSessionFactory(
     serialize=cPickle.dumps,
     deserialize=cPickle.loads,
     id_generator=_generate_session_id,
+    request_attribute='session',
     ):
     """
     Constructs and returns a session factory that will provide session data
@@ -157,6 +158,10 @@ def RedisSessionFactory(
     Default: private function that uses sha1 with the time and random elements
     to create a 40 character unique ID.
 
+    ``request_attribute``
+    The name of the request attribute this package reads a session off of.  This
+    should almost never be changed.
+
     The following arguments are also passed straight to the ``StrictRedis``
     constructor and allow you to further configure the Redis client::
 
@@ -224,6 +229,7 @@ def RedisSessionFactory(
             cookie_secure=cookie_secure,
             cookie_httponly=cookie_httponly,
             secret=secret,
+            request_attribute=request_attribute,
             )
         delete_cookie = functools.partial(
             _delete_cookie,
@@ -237,6 +243,7 @@ def RedisSessionFactory(
             cookie_on_exception=cookie_on_exception,
             set_cookie=set_cookie,
             delete_cookie=delete_cookie,
+            request_attribute=request_attribute,
             )
         request.add_response_callback(cookie_callback)
 
@@ -273,8 +280,9 @@ def _set_cookie(
     cookie_secure,
     cookie_httponly,
     secret,
+    request_attribute='session',
     ):
-    cookieval = signed_serialize(request.session.session_id, secret)
+    cookieval = signed_serialize(getattr(request, request_attribute).session_id, secret)
     response.set_cookie(
         cookie_name,
         value=cookieval,
@@ -297,9 +305,10 @@ def _cookie_callback(
     cookie_on_exception,
     set_cookie,
     delete_cookie,
+    request_attribute='session',
     ):
     """Response callback to set the appropriate Set-Cookie header."""
-    session = request.session
+    session = getattr(request, request_attribute)
     if session._invalidated:
         if session_cookie_was_valid:
             delete_cookie(response=response)
