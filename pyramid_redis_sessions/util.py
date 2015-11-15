@@ -151,10 +151,7 @@ def persist(wrapped):
     """
     def wrapped_persist(session, *arg, **kw):
         result = wrapped(session, *arg, **kw)
-        with session.redis.pipeline() as pipe:
-            pipe.set(session.session_id, session.to_redis())
-            pipe.expire(session.session_id, session.timeout)
-            pipe.execute()
+        session.redis.setex(session.session_id, session.to_redis(), session.timeout)
         return result
 
     return wrapped_persist

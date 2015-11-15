@@ -42,6 +42,10 @@ class DummyRedis(object):
     def set(self, key, value):
         self.store[key] = value
 
+    def setex(self, key, value, timeout):
+        self.store[key] = value
+        self.timeouts[key] = timeout
+
     def delete(self, *keys):
         for key in keys:
             del self.store[key]
