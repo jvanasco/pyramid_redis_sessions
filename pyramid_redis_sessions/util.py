@@ -151,7 +151,10 @@ def persist(wrapped):
     """
     def wrapped_persist(session, *arg, **kw):
         result = wrapped(session, *arg, **kw)
-        session.redis.setex(session.session_id, session.to_redis(), session.timeout)
+        # Redis is `key, value, timeout`
+        # StrictRedis is `key, timeout, value`
+        # this package uses StrictRedis
+        session.redis.setex(session.session_id, session.timeout, session.to_redis(), )
         return result
 
     return wrapped_persist
