@@ -12,6 +12,7 @@ class DummySession(object):
         self.serialize = serialize
         self.managed_dict = {}
         self.created = float()
+        self.assume_redis_lru = None
 
     def to_redis(self):
         return self.serialize({
